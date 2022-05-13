@@ -186,6 +186,11 @@ pub trait Ast<'ctx>: fmt::Debug {
     */
     fn new(ctx: &'ctx Context, ast: Z3_ast) -> Self where Self: Sized;
 
+    /// Allows user to manually persist an AST node
+    fn inc_ref(&self) {
+        unsafe {Z3_inc_ref(self.get_ctx().z3_ctx, self.get_z3_ast());}
+    }
+
     /// Compare this `Ast` with another `Ast`, and get a [`Bool`](struct.Bool.html)
     /// representing the result.
     ///
