@@ -1,8 +1,8 @@
-use ast::Ast;
+use ast::{Ast, Dynamic};
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
-use Context;
+use ::{Context, FuncDecl};
 use Model;
 use Optimize;
 use Solver;
@@ -75,6 +75,42 @@ impl<'ctx> Model<'ctx> {
             None
         }
     }
+
+    pub fn get_num_consts(&self) -> u32 {
+        unsafe {Z3_model_get_num_consts(self.ctx.z3_ctx, self.z3_mdl)}
+    }
+
+    pub fn get_num_funcs(&self) -> u32 {
+        unsafe {Z3_model_get_num_funcs(self.ctx.z3_ctx, self.z3_mdl)}
+    }
+
+    pub fn size(&self) -> u32 {
+        self.get_num_consts() + self.get_num_funcs()
+    }
+
+    pub fn get_const_decl(&self, i: u32) -> FuncDecl<'ctx> {
+        unsafe {
+            let raw = Z3_model_get_const_decl(self.ctx.z3_ctx, self.z3_mdl, i);
+            FuncDecl::from_raw(self.ctx, raw)
+        }
+    }
+
+    pub fn get_func_decl(&self, i: u32) -> FuncDecl<'ctx> {
+        unsafe {
+            let raw = Z3_model_get_func_decl(self.ctx.z3_ctx, self.z3_mdl, i);
+            FuncDecl::from_raw(self.ctx, raw)
+        }
+    }
+
+    pub fn get_const_interp(&self, c: &FuncDecl) -> Z3_ast {
+        unsafe { Z3_model_get_const_interp(self.ctx.z3_ctx, self.z3_mdl, c.z3_func_decl)}
+    }
+
+    // pub fn get_func_interp(&self, c: &FuncDecl) -> Dynamic<'ctx> {
+    //     Dynamic::from_ast(unsafe {
+    //         Z3_model_get_func_interp(self.ctx.z3_ctx, self.z3_mdl, c.z3_func_decl)
+    //     })
+    // }
 }
 
 impl<'ctx> fmt::Display for Model<'ctx> {
